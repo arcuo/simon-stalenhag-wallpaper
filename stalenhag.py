@@ -195,7 +195,17 @@ def set_background(path):
     if path:
         save_current_background(path)
         print('Setting image: ', path)
-        app('Finder').desktop_picture.set(mactypes.File(path))
+        if 'wind' in PLATFORM:
+            path = Path(path).parts
+            ctypes.windll.user32.SystemParametersInfoW(20, 0, os.path.join(*path), 0)
+        elif DESKTOP  == 'plasma':
+            bus = dbus.SessionBus()
+            plasma = dbus.Interface(bus.get_object('org.kde.plasmashell', '/PlasmaShell'), dbus_interface='org.kde.PlasmaShell')
+            plasma.evaluateScript(jscript % path)
+        elif PLATFORM == 'darwin':
+            app('Finder').desktop_picture.set(mactypes.File(path))
+        else:
+            os.system('gsettings set org.gnome.desktop.background picture-uri file://' + path)
     else:
         print('Failed to find a new image')
 
