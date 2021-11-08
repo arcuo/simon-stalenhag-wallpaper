@@ -84,3 +84,10 @@ python install_windows.py
 python install_windows.py -u
 ```
 
+### Mac
+Install appscript to change the background.
+```
+sudo easy_install appscript
+
+pip3 install appscript
+```
