@@ -203,6 +203,9 @@ def set_background(path):
             plasma = dbus.Interface(bus.get_object('org.kde.plasmashell', '/PlasmaShell'), dbus_interface='org.kde.PlasmaShell')
             plasma.evaluateScript(jscript % path)
         else:
+            # Dark mode
+            os.system('gsettings set org.gnome.desktop.background picture-uri-dark file://' + path)
+            # Normal mode
             os.system('gsettings set org.gnome.desktop.background picture-uri file://' + path)
     else:
         print('Failed to find a new image')
