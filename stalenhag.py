@@ -4,7 +4,6 @@ import re, os, sys, random, json, argparse
 from enum import Enum
 from urllib import request
 from pathlib import Path
-from appscript import app, mactypes
 
 BASE = 'http://www.simonstalenhag.se/'
 
@@ -199,6 +198,7 @@ def set_background(path):
             path = Path(path).parts
             ctypes.windll.user32.SystemParametersInfoW(20, 0, os.path.join(*path), 0)
         elif PLATFORM == 'darwin':
+            from appscript import app, mactypes
             app('Finder').desktop_picture.set(mactypes.File(path))
         elif DESKTOP  == 'plasma':
             bus = dbus.SessionBus()
