@@ -121,6 +121,16 @@ def get_random_local_image(favorites=False):
         return None
 
 
+def select_image(images: list):
+    title = "Choose an image: "
+    images.sort()
+    img, index = pick(options=images, title=title)
+    if not local_exists(img):
+        download_image(img)
+
+    return IMAGES_DIR + img.replace("/", "-")
+
+
 def get_random_image():
     check_dirs()
 
@@ -307,6 +317,7 @@ parser.add_argument("--listfav", help="List favorite wallpapers", action="store_
 parser.add_argument(
     "-f", "--filter", help="Filter/search for specific wallpapers", action="store"
 )
+parser.add_argument("--select", help="Select a specific wallpaper", action="store_true")
 parser.add_argument("--collections", nargs="*", help="Set the default base of images")
 parser.add_argument(
     "--fav",
@@ -382,6 +393,10 @@ def run():
             setCollections(collections)
             print(f"Wallpapers will be downloaded from: {getCollectionNames()}")
     # set background
+    elif args.select:
+        images = get_images_list()
+        img = select_image(images)
+        set_background(img)
     if not any(vars(args).values()):
         try:
             img = get_random_image()
