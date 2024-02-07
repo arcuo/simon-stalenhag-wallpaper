@@ -4,7 +4,6 @@ import re, os, sys, random, json, argparse
 from enum import Enum
 from urllib import request
 from pathlib import Path
-from pick import pick
 
 BASE = "http://www.simonstalenhag.se/"
 
@@ -122,6 +121,8 @@ def get_random_local_image(favorites=False):
 
 
 def select_image(images: list):
+    from pick import pick
+
     title = "Choose an image: "
     images.sort()
     img, index = pick(options=images, title=title)
@@ -150,13 +151,19 @@ def get_filtered_image(filter_term):
     images_filtered.sort()
     if len(images_filtered) > 0:
         print("Found " + str(len(images_filtered)) + " images.")
-        name, index = pick(
-            options=images_filtered,
-            title="Found "
-            + str(len(images_filtered))
-            + " images with search term: "
-            + filter_term,
-        )
+        try:
+            from pick import pick
+
+            name, index = pick(
+                options=images_filtered,
+                title="Found "
+                + str(len(images_filtered))
+                + " images with search term: "
+                + filter_term,
+            )
+        except ImportError:
+            name = random.choice(images_filtered)
+
         if not local_exists(name):
             download_image(name)
         return IMAGES_DIR + name.replace("/", "-")
