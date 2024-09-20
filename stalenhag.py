@@ -10,6 +10,7 @@ BASE = "http://www.simonstalenhag.se/"
 
 class Pages(Enum):
     ALL = ""
+    SWEDISH_MACHINES = f"{BASE}svema.html"
     STEEL_MEADOW = BASE
     PALEOART = f"{BASE}paleo.html"
     COMMISIONS = f"{BASE}other.html"
@@ -20,6 +21,7 @@ class Pages(Enum):
 
 
 class Collections(Enum):
+    SWEDISH_MACHINES = "SWEDISH_MACHINES"
     ALL = "ALL"
     STEEL = "STEEL_MEADOW"
     PALEO = "PALEOART"
@@ -53,8 +55,7 @@ def check_dirs():
 
 
 def setup_config():
-    c = {"current": "", "favorites": [], "collections": ["ALL"]}
-
+    c = {"current": "", "favorites": [], "blacklist": [], "collections": ["ALL"]}
     save_config(c)
 
 
@@ -91,10 +92,21 @@ def get_images_list(prints=False):
     )
     images = []
     for url in urls:
-        contents = request.urlopen(url).read()
-        search = r"(?:bilder|paleo|other|tftl|tftf)big\/[a-zA-Z0-9_]*\.jpg"
-        collectionImages = re.findall(search, str(contents))
+        try:
+            contents = request.urlopen(url).read()
+        except Exception as e:
+            print(f"Failed to download {url} with error: {e}")
+            continue
+        regularSearch = (
+            r"(?:(?:bilder|paleo|other|tftl|tftf)big|4k)\/[a-zA-Z0-9_]*\.jpg"
+        )
+        collectionImages = re.findall(regularSearch, str(contents))
         images.extend(collectionImages)
+
+
+    # Filter out blacklisted images
+    config = get_config()
+    images = list(set(images) - set(config["blacklist"]))
 
     return list(set(images))
 
@@ -300,7 +312,7 @@ def list_wallpapers(favorites=False):
         else:
             print('No favorites. Use "stalenhag save" to save current background.')
     else:
-        print(f"Wallpapers online - ", end="")
+        print("Wallpapers online - ", end="")
         for w in get_images_list(prints=True):
             print("Image name: " + w)
 
@@ -333,6 +345,14 @@ parser.add_argument(
     action="store_true",
 )
 parser.add_argument("--clearconfig", help="Remove config file", action="store_true")
+parser.add_argument(
+    "--blacklist",
+    help="Blacklist current image (if you don't like it)",
+    action="store_true",
+)
+parser.add_argument(
+    "--reset-config", help="Reset config file to default", action="store_true"
+)
 
 windows_bundled = getattr(sys, "frozen", False) and hasattr(sys, "_MEIPASS")
 
@@ -404,6 +424,14 @@ def run():
         images = get_images_list()
         img = select_image(images)
         set_background(img)
+    elif args.blacklist:
+        c = get_config()
+        c["blacklist"].append(c["current"])
+        save_config(c)
+        img = get_random_local_image()
+        set
+    elif args.reset_config:
+        setup_config()
     if not any(vars(args).values()):
         try:
             img = get_random_image()
