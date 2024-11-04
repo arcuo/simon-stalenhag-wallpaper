@@ -103,7 +103,6 @@ def get_images_list(prints=False):
         collectionImages = re.findall(regularSearch, str(contents))
         images.extend(collectionImages)
 
-
     # Filter out blacklisted images
     config = get_config()
     images = list(set(images) - set(config["blacklist"]))
@@ -316,6 +315,34 @@ def list_wallpapers(favorites=False):
         for w in get_images_list(prints=True):
             print("Image name: " + w)
 
+def handle_blacklist():
+    c = get_config()
+    blacklisted = c["blacklist"]
+
+    from pick import pick
+    # Get list of images and allow user to select which to blacklist
+    images = get_images_list()
+    images.sort()
+    # Set current image to the top of the list
+    images.sort(key=lambda x: x != c["current"])
+    to_be_blacklisted = [img for img, index in pick(options=images, title="Choose images to blacklist", multiselect=True)]
+        
+    new_blacklist = list(set(blacklisted + to_be_blacklisted))
+
+    # Allow updating the blacklist
+    to_remove = [img for img, index in pick(options=new_blacklist, title="Edit current blacklist. Select to remove", multiselect=True)]
+    new_blacklist = list(set(new_blacklist) - set(to_remove))
+
+    c["blacklist"] = new_blacklist
+    save_config(c)
+
+    print("Blacklisted images: ", new_blacklist)
+
+    # If the current image is blacklisted, set a new one
+    if c["current"] in to_be_blacklisted:
+        img = get_random_image()
+        set_background(img)
+
 
 parser = argparse.ArgumentParser(
     description="Set and manage Simon Stålenhag wallpaper.",
@@ -424,14 +451,10 @@ def run():
         images = get_images_list()
         img = select_image(images)
         set_background(img)
-    elif args.blacklist:
-        c = get_config()
-        c["blacklist"].append(c["current"])
-        save_config(c)
-        img = get_random_local_image()
-        set
     elif args.reset_config:
         setup_config()
+    elif args.blacklist:
+        handle_blacklist()
     if not any(vars(args).values()):
         try:
             img = get_random_image()
